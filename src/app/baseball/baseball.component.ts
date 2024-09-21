@@ -1,6 +1,5 @@
 import { Component, OnInit, ViewEncapsulation } from '@angular/core';
 import * as d3 from 'd3';
-import { drag } from 'd3';
 
 // https://sinequa.github.io/sba-angular/tipstricks/d3-angular.html
 // https://medium.com/netscape/visualizing-data-with-angular-and-d3-209dde784aeb
@@ -49,8 +48,6 @@ export class BaseballComponent implements OnInit {
 
   }
 
-
-
   createChart(data: stats[]) {
     let that = this;
 
@@ -60,7 +57,6 @@ export class BaseballComponent implements OnInit {
 
     // let svg = d3.select("body")
     let svg = d3.select("#baseball")
-
       .append("svg")
       .attr("width", width + margin.left + margin.right)
       .attr("height", height + margin.top + margin.bottom)
@@ -74,14 +70,22 @@ export class BaseballComponent implements OnInit {
     //   console.log(svg)
     // }
 
-    let view = svg.append("rect")
-      .attr("class", "view")
-      .attr("x", 0.5)
-      .attr("y", 0.5)
-      .attr("width", width - 1)
-      .attr("height", height - 1)
-      .style("fill", "none")
-      .style("pointer-events", "all")
+    // -----------------------------------------------------------
+    // Begin - I commented this out since it was getting the focus on drag
+    // -- Jeffery
+    // ***********************************************************
+    // let view = svg.append("rect")
+    //   .attr("class", "view")
+    //   .attr("x", 0.5)
+    //   .attr("y", 0.5)
+    //   .attr("width", width - 1)
+    //   .attr("height", height - 1)
+    //   .style("fill", "none")
+    //   .style("pointer-events", "all")
+    // -----------------------------------------------------------
+    // END - I commented this out since it was getting the focus on drag
+    // -- Jeffery
+    // ***********************************************************
       // .call(d3.zoom()
       //   .scaleExtent([1 / 2, 10])
       //   .on("zoom", zoomed));
@@ -146,20 +150,6 @@ export class BaseballComponent implements OnInit {
       .attr("transform", function (d) {
         return "translate(" + xscale(d.x || 0) + "," + yscale(d.y || 0) + ")"
       })
-      // .call(d3.drag()
-      // .on("start", dragstarted)
-      // .on("drag", (event: any, d: stats) => { d3.select(this).attr("cx", d.x = event.x).attr("cy", d.y = event.y); }))
-      // .on("end", () => { g.attr("cursor", "grab"); });
-
-      // svg.call(d3.zoom()
-      // .extent([[0, 0], [width, height]])
-      // .scaleExtent([1, 8])
-      // .on("zoom", zoomed));
-
-    group
-      .append("circle")
-      .attr("r", function (d:stats) { return radius(d.r || 0); })
-      .style("fill", (d:stats) => { return color( d["team86"]) })
       .on("mouseover", (event: any, d:stats) => {
         // console.log(event, d);
         let player = d["name1"] + " " + d["name2"];
@@ -181,6 +171,45 @@ export class BaseballComponent implements OnInit {
           .style("opacity", 0);
       })
 
+      const move = (selection: any, event: any, d: any) => {
+  
+        const x = this.clamped(xscale(d.x) + event.dx, 0, width)
+        const y = this.clamped(yscale(d.y) + event.dy, 0, height)
+  
+        d.x = xscale.invert(x);
+        d.y = yscale.invert(y);
+  
+        selection
+          .attr("transform", `translate(${x}, ${y})`)
+  
+        d3.select('#tooltip')
+          .style("left", x + 'px')
+          .style("top", (y + 30) + 'px')
+      };
+
+      svg.selectAll("g.bubble")
+      .call(d3.drag()
+        .on("start", (event: any, d: unknown)=>{})
+        .on("drag", function(event: any, d: unknown){
+          move(d3.select(this), event, d);
+        })
+        .on("end", (event: any, d: unknown)=>{}) as any
+      )
+      // .call(d3.drag()
+      // .on("start", dragstarted)
+      // .on("drag", (event: any, d: stats) => { d3.select(this).attr("cx", d.x = event.x).attr("cy", d.y = event.y); }))
+      // .on("end", () => { g.attr("cursor", "grab"); });
+
+      // svg.call(d3.zoom()
+      // .extent([[0, 0], [width, height]])
+      // .scaleExtent([1, 8])
+      // .on("zoom", zoomed));
+
+    group
+      .append("circle")
+      .attr("r", function (d:stats) { return radius(d.r || 0); })
+      .style("fill", (d:stats) => { return color( d["team86"]) })
+
     group
       .append("text")
       .attr("x", function (d) { return radius(d.r || 0); })
@@ -189,28 +218,9 @@ export class BaseballComponent implements OnInit {
         return d["name1"] + " " + d["name2"];
       });
 
-    // group
-    //   .call(drag)
-    //   .on('drag', this.handleDrag)
-
 
 
     group
-      .call(drag)
-        .on("drag", (e: DragEvent, d: stats) => {
-          console.log(e, d);
-          // d.x = e.x
-          // d.y = e.y
-          // console.log(e.target.x, e.x);
-          // e.target.x = e.x;
-          // e.target.y = e.y;   
-          // this.update();   
-          
-            // .attr("transform", function (d) {
-            //   return "translate(" + xscale(d.x || 0) + "," + yscale(d.y || 0) + ")"
-            // })
-
-        })
 
         // https://d3js.org/d3-drag#drag-events
         // https://www.d3indepth.com/interaction/
@@ -298,6 +308,16 @@ export class BaseballComponent implements OnInit {
     });
 
   }
+
+  private clamped(value: number, min: number, max: number): number {
+    if(value < min) {
+      return min;
+    } else if (value > max) {
+      return max;
+    }
+    return value;
+  }
+
 
   // drag = d3.drag()
   //   .on("drag", (e) => {
