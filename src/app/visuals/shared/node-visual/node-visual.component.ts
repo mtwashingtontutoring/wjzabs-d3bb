@@ -1,4 +1,4 @@
-import { Component, Input } from '@angular/core';
+import { Component, Input, OnChanges } from '@angular/core';
 import { Node } from '../../../d3';
 
 @Component({
@@ -6,20 +6,20 @@ import { Node } from '../../../d3';
   standalone: true,
   imports: [],
   template: `
-    <svg:g [attr.transform]="'translate(' + node.x + ',' + node.y + ')'">
-      <svg:circle
-          class="node"
-          [attr.fill]="node.color"
-          cx="0"
-          cy="0"
-          [attr.r]="node.r">
-      </svg:circle>
-      <svg:text
-          class="node-name"
-          [attr.font-size]="node.fontSize">
-        {{node.id}}
-      </svg:text>
-    </svg:g>
+    <svg:circle
+        class="node"
+        [attr.fill]="node.color"
+        [attr.cx]="node.x"
+        [attr.cy]="node.y"
+        [attr.r]="node.r">
+    </svg:circle>
+    <svg:text
+        class="node-name"
+        [attr.font-size]="node.fontSize"
+        [attr.x]="node.x"
+        [attr.y]="node.y">
+      {{node.id}}
+    </svg:text>
   `,
   styleUrls: ['./node-visual.component.css']
 })
